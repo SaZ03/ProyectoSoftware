@@ -1,13 +1,13 @@
 from flask_login import UserMixin
 import database as db
-from werkzeug.security import check_password_hash, generate_password_hash
 
 class User(UserMixin):
-    def __init__(self, id, email, nombre, id_rol):
+    def __init__(self, id, email, nombre, id_rol, nombre_rol):
         self.id = id
         self.email = email
         self.nombre = nombre
         self.id_rol = id_rol
+        self.nombre_rol = nombre_rol
     
     @staticmethod
     def get(user_id):
@@ -16,28 +16,33 @@ class User(UserMixin):
         FROM Usuario u 
         JOIN RolUsuario ru ON u.id_usuario = ru.id_usuario 
         JOIN Rol r ON ru.id_rol = r.id_rol 
-        WHERE u.id_usuario = %s
+        WHERE u.id_usuario = ?
         """
-        result = db.execute_query(query, (user_id,), fetch=True)
+        result = db.execute_query(query, (user_id,), fetch_one=True)
         
         if result:
-            user_data = result[0]
             return User(
-                id=user_data['id_usuario'],
-                email=user_data['correo'],
-                nombre=user_data['nombre_usuario'],
-                id_rol=user_data['id_rol']
+                id=result['id_usuario'],
+                email=result['correo'],
+                nombre=result['nombre_usuario'],
+                id_rol=result['id_rol'],
+                nombre_rol=result['nombre_rol']
             )
         return None
     
     @staticmethod
     def authenticate(email, password):
-        query = "SELECT id_usuario, correo, nombre_usuario, contrasena_hash FROM Usuario WHERE correo = %s"
-        result = db.execute_query(query, (email,), fetch=True)
+        query = """
+        SELECT u.id_usuario, u.correo, u.nombre_usuario, u.contrasena_hash, r.nombre_rol
+        FROM Usuario u 
+        JOIN RolUsuario ru ON u.id_usuario = ru.id_usuario 
+        JOIN Rol r ON ru.id_rol = r.id_rol 
+        WHERE u.correo = ?
+        """
+        result = db.execute_query(query, (email,), fetch_one=True)
         
-        if result and result[0]:
-            user_data = result[0]
-            # Verificar contraseña (en producción usar check_password_hash)
-            if user_data['contrasena_hash'] == password:  # Temporal - cambiar por hash real
-                return User.get(user_data['id_usuario'])
+        if result:
+            # Verificar contraseña (temporal - comparación directa)
+            if result['contrasena_hash'] == password:  
+                return User.get(result['id_usuario'])
         return None

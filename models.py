@@ -1,74 +1,152 @@
 import database as db
 from datetime import datetime
 
-def get_patient_history(patient_id):
+def get_all_patients():
     query = """
     SELECT 
-        u.*,
-        hm.fecha_ingreso_ux,
-        hm.fecha_ingreso_piso,
-        hm.tipo_interrogatorio,
-        ap.enfermedades_cronicas,
-        ap.alergias_antecedentes,
-        ap.cirugias,
-        ap.tabaquismo,
-        ap.etilismo,
-        anp.ocupacion,
-        anp.escolaridad,
-        af.condicion as antecedente_familiar,
-        af.relacion
+        u.id_usuario,
+        u.nombre_usuario || ' ' || u.apellido_paterno || ' ' || COALESCE(u.apellido_materno, '') as nombre_completo,
+        u.curp,
+        u.telefono,
+        u.correo,
+        u.sexo,
+        CAST((julianday('now') - julianday(u.fecha_nacimiento)) / 365.25 AS INTEGER) as edad,
+        u.calle || ' ' || u.numero_exterior || ' ' || COALESCE(u.numero_interior, '') || ', ' || u.colonia as direccion,
+        u.contacto_emergencia
     FROM Usuario u
-    LEFT JOIN HistorialMedico hm ON u.id_usuario = hm.id_paciente
-    LEFT JOIN AntecedentePatologico ap ON hm.id_historial = ap.id_historial
-    LEFT JOIN AntecedenteNoPatologico anp ON hm.id_historial = anp.id_historial
-    LEFT JOIN AntecedenteFamiliar af ON hm.id_historial = af.id_historial
-    WHERE u.id_usuario = %s
+    JOIN RolUsuario ru ON u.id_usuario = ru.id_usuario
+    JOIN Rol r ON ru.id_rol = r.id_rol
+    WHERE r.nombre_rol = 'Paciente'
     """
-    return db.execute_query(query, (patient_id,), fetch=True)
+    return db.execute_query(query, fetch=True) or []
 
-def update_patient_history(patient_id, data, medic_id):
-    # 1. Verificar si existe historial médico
-    check_query = "SELECT id_historial FROM HistorialMedico WHERE id_paciente = %s"
-    historial = db.execute_query(check_query, (patient_id,), fetch=True)
-    
-    if not historial:
-        # Crear historial médico si no existe
-        historial_query = """
-        INSERT INTO HistorialMedico (id_paciente, fecha_ingreso_ux, ultima_actualizacion)
-        VALUES (%s, %s, %s)
-        """
-        historial_id = db.execute_query(historial_query, (patient_id, datetime.now(), datetime.now()))
-    else:
-        historial_id = historial[0]['id_historial']
-    
-    # 2. Actualizar antecedentes patológicos
-    update_patologico = """
-    INSERT INTO AntecedentePatologico (id_historial, enfermedades_cronicas, alergias_antecedentes, cirugias, tabaquismo, etilismo)
-    VALUES (%s, %s, %s, %s, %s, %s)
-    ON DUPLICATE KEY UPDATE
-        enfermedades_cronicas = VALUES(enfermedades_cronicas),
-        alergias_antecedentes = VALUES(alergias_antecedentes),
-        cirugias = VALUES(cirugias),
-        tabaquismo = VALUES(tabaquismo),
-        etilismo = VALUES(etilismo)
+def get_patient_by_id(patient_id):
+    query = """
+    SELECT 
+        u.id_usuario,
+        u.nombre_usuario,
+        u.apellido_paterno,
+        u.apellido_materno,
+        u.curp,
+        u.nss,
+        u.fecha_nacimiento,
+        u.sexo,
+        u.estado_civil,
+        u.calle,
+        u.numero_exterior,
+        u.numero_interior,
+        u.colonia,
+        u.codigo_postal,
+        u.ciudad,
+        u.estado,
+        u.pais,
+        u.telefono,
+        u.correo,
+        u.contacto_emergencia,
+        u.tipo_sangre,
+        u.altura,
+        u.peso,
+        u.seguro_medico,
+        CAST((julianday('now') - julianday(u.fecha_nacimiento)) / 365.25 AS INTEGER) as edad
+    FROM Usuario u
+    WHERE u.id_usuario = ?
     """
-    db.execute_query(update_patologico, (
-        historial_id,
-        data.get('antecedentes_medicos'),
-        data.get('alergias'),
-        data.get('antecedentes_quirurgicos'),
-        'tabaco' in data.get('habitos', ''),
-        'alcohol' in data.get('habitos', '')
-    ))
-    
-    # 3. Registrar en historial de actualizaciones
-    audit_query = """
-    INSERT INTO HistorialActualizacion (id_historial, id_medico, fecha, descripcion)
-    VALUES (%s, %s, %s, %s)
+    return db.execute_query(query, (patient_id,), fetch_one=True)
+
+def search_patients(search_term):
+    query = """
+    SELECT 
+        u.id_usuario,
+        u.nombre_usuario || ' ' || u.apellido_paterno || ' ' || COALESCE(u.apellido_materno, '') as nombre_completo,
+        u.curp,
+        u.telefono,
+        u.sexo,
+        CAST((julianday('now') - julianday(u.fecha_nacimiento)) / 365.25 AS INTEGER) as edad
+    FROM Usuario u
+    JOIN RolUsuario ru ON u.id_usuario = ru.id_usuario
+    JOIN Rol r ON ru.id_rol = r.id_rol
+    WHERE r.nombre_rol = 'Paciente'
+    AND (u.nombre_usuario LIKE ? OR u.apellido_paterno LIKE ? OR u.curp LIKE ? OR u.telefono LIKE ?)
     """
-    db.execute_query(audit_query, (
-        historial_id,
-        medic_id,
-        datetime.now(),
-        f"Actualización de historial clínico"
-    ))
+    search_pattern = f"%{search_term}%"
+    return db.execute_query(query, (search_pattern, search_pattern, search_pattern, search_pattern), fetch=True) or []
+
+def update_patient(patient_id, data):
+    query = """
+    UPDATE Usuario 
+    SET 
+        nombre_usuario = ?,
+        apellido_paterno = ?,
+        apellido_materno = ?,
+        curp = ?,
+        fecha_nacimiento = ?,
+        sexo = ?,
+        calle = ?,
+        numero_exterior = ?,
+        colonia = ?,
+        codigo_postal = ?,
+        ciudad = ?,
+        telefono = ?,
+        correo = ?,
+        contacto_emergencia = ?
+    WHERE id_usuario = ?
+    """
+    
+    params = (
+        data['nombre'],
+        data['apellido_paterno'],
+        data['apellido_materno'],
+        data['curp'],
+        data['fecha_nacimiento'],
+        data['sexo'],
+        data['calle'],
+        data['numero_exterior'],
+        data['colonia'],
+        data['codigo_postal'],
+        data['ciudad'],
+        data['telefono'],
+        data['correo'],
+        data['contacto_emergencia'],
+        patient_id
+    )
+    
+    return db.execute_query(query, params)
+
+def create_patient(data):
+    query = """
+    INSERT INTO Usuario (
+        nombre_usuario, apellido_paterno, apellido_materno, curp, fecha_nacimiento,
+        sexo, calle, numero_exterior, colonia, codigo_postal, ciudad, telefono,
+        correo, contacto_emergencia, contrasena_hash
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+    
+    # Contraseña temporal
+    temp_password = "temp123"
+    
+    params = (
+        data['nombre'],
+        data['apellido_paterno'], 
+        data['apellido_materno'],
+        data['curp'],
+        data['fecha_nacimiento'],
+        data['sexo'],
+        data['calle'],
+        data['numero_exterior'],
+        data['colonia'],
+        data['codigo_postal'],
+        data['ciudad'],
+        data['telefono'],
+        data['correo'],
+        data['contacto_emergencia'],
+        temp_password
+    )
+    
+    user_id = db.execute_query(query, params)
+    
+    # Asignar rol de paciente
+    if user_id:
+        role_query = "INSERT INTO RolUsuario (id_usuario, id_rol) VALUES (?, (SELECT id_rol FROM Rol WHERE nombre_rol = 'Paciente'))"
+        db.execute_query(role_query, (user_id,))
+    
+    return user_id
