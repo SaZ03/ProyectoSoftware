@@ -18,7 +18,8 @@ def get_all_patients():
     JOIN Rol r ON ru.id_rol = r.id_rol
     WHERE r.nombre_rol = 'Paciente'
     """
-    return db.execute_query(query, fetch=True) or []
+    result = db.execute_query(query, fetch=True)
+    return result if result else []
 
 def get_patient_by_id(patient_id):
     query = """
@@ -46,14 +47,25 @@ def get_patient_by_id(patient_id):
         u.tipo_sangre,
         u.altura,
         u.peso,
-        u.seguro_medico,
-        CAST((julianday('now') - julianday(u.fecha_nacimiento)) / 365.25 AS INTEGER) as edad
+        u.seguro_medico
     FROM Usuario u
     WHERE u.id_usuario = ?
     """
-    return db.execute_query(query, (patient_id,), fetch_one=True)
+    result = db.execute_query(query, (patient_id,), fetch_one=True)
+    if result:
+        # Calcular edad si hay fecha de nacimiento
+        if result['fecha_nacimiento']:
+            birth_date = datetime.strptime(result['fecha_nacimiento'], '%Y-%m-%d')
+            today = datetime.now()
+            result['edad'] = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        else:
+            result['edad'] = None
+    return result
 
 def search_patients(search_term):
+    if not search_term:
+        return get_all_patients()
+    
     query = """
     SELECT 
         u.id_usuario,
@@ -69,84 +81,93 @@ def search_patients(search_term):
     AND (u.nombre_usuario LIKE ? OR u.apellido_paterno LIKE ? OR u.curp LIKE ? OR u.telefono LIKE ?)
     """
     search_pattern = f"%{search_term}%"
-    return db.execute_query(query, (search_pattern, search_pattern, search_pattern, search_pattern), fetch=True) or []
+    result = db.execute_query(query, (search_pattern, search_pattern, search_pattern, search_pattern), fetch=True)
+    return result if result else []
 
 def update_patient(patient_id, data):
-    query = """
-    UPDATE Usuario 
-    SET 
-        nombre_usuario = ?,
-        apellido_paterno = ?,
-        apellido_materno = ?,
-        curp = ?,
-        fecha_nacimiento = ?,
-        sexo = ?,
-        calle = ?,
-        numero_exterior = ?,
-        colonia = ?,
-        codigo_postal = ?,
-        ciudad = ?,
-        telefono = ?,
-        correo = ?,
-        contacto_emergencia = ?
-    WHERE id_usuario = ?
-    """
-    
-    params = (
-        data['nombre'],
-        data['apellido_paterno'],
-        data['apellido_materno'],
-        data['curp'],
-        data['fecha_nacimiento'],
-        data['sexo'],
-        data['calle'],
-        data['numero_exterior'],
-        data['colonia'],
-        data['codigo_postal'],
-        data['ciudad'],
-        data['telefono'],
-        data['correo'],
-        data['contacto_emergencia'],
-        patient_id
-    )
-    
-    return db.execute_query(query, params)
+    try:
+        query = """
+        UPDATE Usuario 
+        SET 
+            nombre_usuario = ?,
+            apellido_paterno = ?,
+            apellido_materno = ?,
+            curp = ?,
+            fecha_nacimiento = ?,
+            sexo = ?,
+            calle = ?,
+            numero_exterior = ?,
+            colonia = ?,
+            codigo_postal = ?,
+            ciudad = ?,
+            telefono = ?,
+            correo = ?,
+            contacto_emergencia = ?
+        WHERE id_usuario = ?
+        """
+        
+        params = (
+            data.get('nombre', ''),
+            data.get('apellido_paterno', ''),
+            data.get('apellido_materno', ''),
+            data.get('curp', ''),
+            data.get('fecha_nacimiento', ''),
+            data.get('sexo', ''),
+            data.get('calle', ''),
+            data.get('numero_exterior', ''),
+            data.get('colonia', ''),
+            data.get('codigo_postal', ''),
+            data.get('ciudad', ''),
+            data.get('telefono', ''),
+            data.get('correo', ''),
+            data.get('contacto_emergencia', ''),
+            patient_id
+        )
+        
+        result = db.execute_query(query, params)
+        return result is not None
+    except Exception as e:
+        print(f"❌ Error en update_patient: {e}")
+        return False
 
 def create_patient(data):
-    query = """
-    INSERT INTO Usuario (
-        nombre_usuario, apellido_paterno, apellido_materno, curp, fecha_nacimiento,
-        sexo, calle, numero_exterior, colonia, codigo_postal, ciudad, telefono,
-        correo, contacto_emergencia, contrasena_hash
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """
-    
-    # Contraseña temporal
-    temp_password = "temp123"
-    
-    params = (
-        data['nombre'],
-        data['apellido_paterno'], 
-        data['apellido_materno'],
-        data['curp'],
-        data['fecha_nacimiento'],
-        data['sexo'],
-        data['calle'],
-        data['numero_exterior'],
-        data['colonia'],
-        data['codigo_postal'],
-        data['ciudad'],
-        data['telefono'],
-        data['correo'],
-        data['contacto_emergencia'],
-        temp_password
-    )
-    
-    user_id = db.execute_query(query, params)
-    
-    # Asignar rol de paciente
-    if user_id:
-        role_query = "INSERT INTO RolUsuario (id_usuario, id_rol) VALUES (?, (SELECT id_rol FROM Rol WHERE nombre_rol = 'Paciente'))"
-        db.execute_query(role_query, (user_id,))
-    
-    return user_id
+    try:
+        query = """
+        INSERT INTO Usuario (
+            nombre_usuario, apellido_paterno, apellido_materno, curp, fecha_nacimiento,
+            sexo, calle, numero_exterior, colonia, codigo_postal, ciudad, telefono,
+            correo, contacto_emergencia, contrasena_hash
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        
+        temp_password = "123"  # Contraseña simple para desarrollo
+        
+        params = (
+            data.get('nombre', ''),
+            data.get('apellido_paterno', ''),
+            data.get('apellido_materno', ''),
+            data.get('curp', ''),
+            data.get('fecha_nacimiento', ''),
+            data.get('sexo', ''),
+            data.get('calle', ''),
+            data.get('numero_exterior', ''),
+            data.get('colonia', ''),
+            data.get('codigo_postal', ''),
+            data.get('ciudad', ''),
+            data.get('telefono', ''),
+            data.get('correo', ''),
+            data.get('contacto_emergencia', ''),
+            temp_password
+        )
+        
+        user_id = db.execute_query(query, params)
+        
+        # Asignar rol de paciente
+        if user_id:
+            role_query = "INSERT INTO RolUsuario (id_usuario, id_rol) VALUES (?, (SELECT id_rol FROM Rol WHERE nombre_rol = 'Paciente'))"
+            db.execute_query(role_query, (user_id,))
+            return user_id
+        return None
+    except Exception as e:
+        print(f"❌ Error en create_patient: {e}")
+        return None
