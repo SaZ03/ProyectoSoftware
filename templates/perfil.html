@@ -210,6 +210,26 @@
         .btn-notifications:hover {
             background-color: #0a4c8a;
         }
+        
+        .btn-logout {
+            background-color: #E1251B;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .btn-logout:hover {
+            background-color: #c11a1a;
+        }
     </style>
 </head>
 <body>
@@ -290,6 +310,11 @@
                         <div class="profile-badge">
                             {{ 'Doctor' if user.rol == 'doctor' else 'Paciente' }}
                         </div>
+                        
+                        <!-- Botón de cerrar sesión agregado -->
+                        <a href="{{ url_for('logout') }}" class="btn-logout">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                        </a>
                     </div>
                 </div>
                 

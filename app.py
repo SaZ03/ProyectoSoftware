@@ -107,7 +107,7 @@ def init_db():
 @app.route('/')
 def index():
     if 'user_id' in session:
-        return redirect(url_for('historial_clinico'))
+        return redirect(url_for('perfil'))  # Cambiado de historial_clinico a perfil
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -129,7 +129,7 @@ def login():
             session['nombre'] = user['nombre']
             session['rol'] = user['rol']
             flash('Inicio de sesión exitoso', 'success')
-            return redirect(url_for('historial_clinico'))
+            return redirect(url_for('perfil'))  # Cambiado de historial_clinico a perfil
         else:
             flash('Usuario o contraseña incorrectos', 'error')
     
