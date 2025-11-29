@@ -411,13 +411,17 @@
             
             <div class="nav-icons ms-auto">
                 <div class="nav-item">
-                    <a href="{{ url_for('historial_clinico') }}" style="color: white; text-decoration: none;">
+                    <a href="{{ url_for('perfil') }}" style="color: white; text-decoration: none;">
                         <i class="bi bi-house-door"></i>
                         <div>Home</div>
                     </a>
                 </div>
                 <div class="nav-item">
+                    {% if session.rol == 'doctor' %}
                     <a href="{{ url_for('buscar_paciente') }}" style="color: white; text-decoration: none;">
+                    {% else %}
+                    <a href="{{ url_for('historial_clinico') }}" style="color: white; text-decoration: none;">
+                    {% endif %}
                         <i class="bi bi-file-earmark"></i>
                         <div>Historial Clínico</div>
                     </a>
@@ -488,7 +492,7 @@
         <div id="patient-info-section">
             <div class="header-actions mb-3">
                 {% if session.rol == 'doctor' %}
-                <button class="btn-back" onclick="window.location.href='{{ url_for('historial_clinico') }}'">
+                <button class="btn-back" onclick="window.location.href='{{ url_for('buscar_paciente') }}'">
                     <i class="bi bi-arrow-left"></i> Regresar
                 </button>
                 {% endif %}

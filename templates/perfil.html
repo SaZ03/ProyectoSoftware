@@ -248,11 +248,11 @@
                 </div>
                 
                 <div class="nav-icons ms-auto">
-                    <a href="{{ url_for('historial_clinico') }}" class="nav-item" data-href="{{ url_for('historial_clinico') }}">
+                    <a href="{{ url_for('perfil') }}" class="nav-item">
                         <i class="bi bi-house-door"></i>
                         <div>Home</div>
                     </a>
-                    <a href="{{ url_for('historial_clinico') }}" class="nav-item" data-href="{{ url_for('historial_clinico') }}">
+                    <a href="{% if session.rol == 'doctor' %}{{ url_for('buscar_paciente') }}{% else %}{{ url_for('historial_clinico') }}{% endif %}" class="nav-item">
                         <i class="bi bi-file-earmark"></i>
                         <div>Historial Clínico</div>
                     </a>
@@ -260,7 +260,7 @@
                         <i class="bi bi-prescription2"></i>
                         <div>Medicamentos</div>
                     </div>
-                    <a href="{{ url_for('perfil') }}" class="nav-item" data-href="{{ url_for('perfil') }}">
+                    <a href="{{ url_for('perfil') }}" class="nav-item">
                         <i class="bi bi-person"></i>
                         <div>Perfil</div>
                     </a>
@@ -277,7 +277,7 @@
     <div class="container-fluid px-4 mt-4" style="max-width: 1200px; margin: 0 auto;">
         <!-- Botones superiores -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <a href="{{ url_for('historial_clinico') }}" class="btn-back">
+            <a href="{% if session.rol == 'doctor' %}{{ url_for('buscar_paciente') }}{% else %}{{ url_for('historial_clinico') }}{% endif %}" class="btn-back">
                 <i class="bi bi-chevron-left"></i> Regresar
             </a>
             <button class="btn-notifications">
@@ -294,7 +294,7 @@
                             <i class="bi bi-person-fill"></i>
                         </div>
                         <div class="profile-name">{{ user.nombre }}</div>
-                        <div class="profile-role">Paciente</div>
+                        <div class="profile-role">{{ 'Doctor' if user.rol == 'doctor' else 'Paciente' }}</div>
                         
                         <div class="profile-ids">
                             <div class="profile-id">
@@ -329,7 +329,7 @@
                         {% if user.rol != 'doctor' %}
                         <div class="info-field">
                             <div class="info-label">Sexo</div>
-                            <div class="info-value">Masculino</div>
+                            <div class="info-value">Femenino</div>
                         </div>
                         {% endif %}
                         
@@ -361,17 +361,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Navegación
-        document.querySelectorAll('[data-href]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const href = this.getAttribute('data-href');
-                if (href) {
-                    window.location.href = href;
-                }
-            });
-        });
-    </script>
 </body>
 </html>
