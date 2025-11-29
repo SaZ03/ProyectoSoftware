@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - Sistema de Historial Clínico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #0D5FA6;
+            --secondary: #E1251B;
+        }
+        
+        .navbar {
+            background-color: white;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: #0D5FA6 !important;
+            font-size: 24px;
+        }
+        
+        .nav-link {
+            color: #333 !important;
+            font-weight: 500;
+        }
+        
+        .nav-link.active {
+            color: #0D5FA6 !important;
+            font-weight: 600;
+        }
+        
+        .card {
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .card-header {
+            background-color: white;
+            color: #0D5FA6;
+            font-weight: 600;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 1.25rem;
+        }
+        
+        .profile-icon {
+            font-size: 80px;
+            color: #0D5FA6;
+        }
+        
+        .btn-primary {
+            background-color: #0D5FA6;
+            border-color: #0D5FA6;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0a4c8a;
+            border-color: #0a4c8a;
+        }
+        
+        .navbar-text {
+            color: #333 !important;
+        }
+        
+        footer {
+            background-color: #f8f9fa;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .badge-primary {
+            background-color: #0D5FA6;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('historial_clinico') }}">Historial Clínico</a>
+            
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('historial_clinico') }}">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('perfil') }}">Perfil</a>
+                    </li>
+                </ul>
+                
+                <div class="navbar-nav">
+                    <span class="navbar-text me-3">
+                        <i class="bi bi-person-circle"></i> {{ session.nombre }} ({{ session.rol }})
+                    </span>
+                    <a class="nav-link" href="{{ url_for('logout') }}">Cerrar Sesión</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="mb-0">Perfil de Usuario</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-person-circle profile-icon"></i>
+                            <h3 class="mt-2">{{ user.nombre }}</h3>
+                            <span class="badge badge-primary">{{ 'Doctor' if user.rol == 'doctor' else 'Paciente' }}</span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Nombre de usuario:</label>
+                                <p class="form-control-plaintext">{{ user.username }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Rol:</label>
+                                <p class="form-control-plaintext">{{ 'Doctor' if user.rol == 'doctor' else 'Paciente' }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if user.rol == 'doctor' %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Especialidad:</label>
+                                <p class="form-control-plaintext">{{ user.especialidad or 'No especificada' }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Correo electrónico:</label>
+                                <p class="form-control-plaintext">{{ user.email or 'No especificado' }}</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Teléfono:</label>
+                                <p class="form-control-plaintext">{{ user.telefono or 'No especificado' }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <a href="{{ url_for('historial_clinico') }}" class="btn btn-primary">
+                                <i class="bi bi-arrow-left"></i> Volver al Historial
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-3 mt-5">
+        <div class="container">
+            <p class="text-center mb-0">&copy; 2023 Sistema de Historial Clínico. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
