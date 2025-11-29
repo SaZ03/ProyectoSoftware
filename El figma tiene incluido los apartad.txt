@@ -1,0 +1,30 @@
+El figma tiene incluido los apartados respectivos de cada uno de los 4 tipos de usuarios (paciente, farmaceutico, doctor, administrador) en aplicacion web, y en aplicacion movil para los usuarios tipo paciente unicamente. Adicionalmente, hay un apartado unicamente exclusive al design system empleado
+
+Se aplico el design system a cada uno de los proptipos, y esta visible (los colores y formatos utilizados pariculares) en cada uno de los apartados.
+
+A continuación estan los links al figma (DEVMODE) y los prototipos
+
+DEVMODE
+
+https://www.figma.com/design/ywFLHZuB3lLcw0wLj8Ac5R/Prototipo-Benavides?node-id=0-1&m=dev&t=4jtDOfTYJX3noeaX-1
+
+
+PACIENTE APP-MOVIL
+
+https://www.figma.com/proto/ywFLHZuB3lLcw0wLj8Ac5R/Prototipo-Benavides?node-id=0-1&t=4jtDOfTYJX3noeaX-1
+
+PACIENTE
+
+https://www.figma.com/proto/ywFLHZuB3lLcw0wLj8Ac5R/Prototipo-Benavides?node-id=291-7472&t=4jtDOfTYJX3noeaX-1
+
+FARMACEUTICO
+
+https://www.figma.com/proto/ywFLHZuB3lLcw0wLj8Ac5R/Prototipo-Benavides?node-id=291-4975&t=4jtDOfTYJX3noeaX-1
+
+DOCTOR
+
+https://www.figma.com/proto/ywFLHZuB3lLcw0wLj8Ac5R/Prototipo-Benavides?node-id=75-43&t=4jtDOfTYJX3noeaX-1
+
+ADMINISTRADOR
+
+https://www.figma.com/proto/ywFLHZuB3lLcw0wLj8Ac5R/Prototipo-Benavides?node-id=333-263&t=4jtDOfTYJX3noeaX-1
